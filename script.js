@@ -4,6 +4,7 @@
 // @version      1.0.0
 // @description  Highlight likely AI-generated text using configurable heuristics
 // @author       anrinion
+// @license      MIT
 // @match        *://*/*
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -881,7 +882,6 @@
         return name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
     }
 
-    // ... (rest of the code remains the same)
     // ==================== INITIALIZATION ====================
     function init() {
         log('Initializing AI Highlighter');
