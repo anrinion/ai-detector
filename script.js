@@ -19,8 +19,8 @@
     // ==================== CONFIGURATION & STATE ====================
     const DEFAULT_CONFIG = {
         // Global
-        threshold: 50,
-        debounceMs: 500,
+        threshold: 6,
+        debounceMs: 10000,
         excludedDomains: [],
         debug: false,
 
@@ -657,6 +657,7 @@
             </div>
 
             <div style="display:flex; gap:10px;">
+                <button id="ai-exclude-site" style="padding:8px 16px; background:#f44336; color:white; border:none; border-radius:4px; cursor:pointer;">Exclude This Site</button>
                 <button id="ai-save-settings" style="padding:8px 16px; background:#4CAF50; color:white; border:none; border-radius:4px; cursor:pointer;">Save & Rescan</button>
                 <button id="ai-rescan" style="padding:8px 16px; background:#2196F3; color:white; border:none; border-radius:4px; cursor:pointer;">Rescan Now</button>
             </div>
@@ -664,6 +665,87 @@
 
         settingsPanel.innerHTML = html;
         document.body.appendChild(settingsPanel);
+
+        // Helper to render heuristic config panel
+        function renderHeuristicConfig(name, cfgHeur) {
+            const container = document.createElement('div');
+            container.style.marginLeft = '25px';
+            container.style.marginTop = '5px';
+            container.style.padding = '5px';
+            container.style.backgroundColor = '#f5f5f5';
+            container.style.borderRadius = '4px';
+            container.style.display = 'none'; // hidden by default
+
+            const paramNames = Object.keys(cfgHeur).filter(k => k !== 'enabled' && k !== 'weight');
+            if (paramNames.length === 0) {
+                container.innerHTML = '<em>No adjustable parameters</em>';
+                return container;
+            }
+
+            paramNames.forEach(param => {
+                const value = cfgHeur[param];
+                const div = document.createElement('div');
+                div.style.marginBottom = '8px';
+
+                const label = document.createElement('label');
+                label.style.display = 'block';
+                label.style.fontSize = '12px';
+                label.textContent = param + ':';
+
+                let input;
+                if (typeof value === 'boolean') {
+                    input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.checked = value;
+                    input.dataset.heuristic = name;
+                    input.dataset.param = param;
+                    input.dataset.type = 'boolean';
+                    label.appendChild(input);
+                    label.appendChild(document.createTextNode(' Enabled'));
+                } else if (typeof value === 'number') {
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.value = value;
+                    input.step = param.includes('Threshold') || param.includes('Ratio') ? '0.1' : '1';
+                    input.min = '0';
+                    input.style.width = '80px';
+                    input.dataset.heuristic = name;
+                    input.dataset.param = param;
+                    input.dataset.type = 'number';
+                    div.appendChild(label);
+                    div.appendChild(input);
+                } else if (Array.isArray(value)) {
+                    input = document.createElement('textarea');
+                    input.value = value.join('\n');
+                    input.rows = 3;
+                    input.style.width = '100%';
+                    input.style.fontSize = '12px';
+                    input.dataset.heuristic = name;
+                    input.dataset.param = param;
+                    input.dataset.type = 'array';
+                    div.appendChild(label);
+                    div.appendChild(input);
+                } else {
+                    // fallback string input
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = value;
+                    input.style.width = '100%';
+                    input.dataset.heuristic = name;
+                    input.dataset.param = param;
+                    input.dataset.type = 'string';
+                    div.appendChild(label);
+                    div.appendChild(input);
+                }
+
+                if (input && !(typeof value === 'boolean')) {
+                    div.appendChild(input);
+                }
+                container.appendChild(div);
+            });
+
+            return container;
+        }
 
         // Populate heuristics toggles and params
         const heurContainer = document.getElementById('ai-heuristics-list');
@@ -692,18 +774,23 @@
             label.appendChild(span);
             div.appendChild(label);
 
-            // Add a small "config" link for advanced parameters (simplified for this version)
-            const configLink = document.createElement('a');
-            configLink.href = '#';
-            configLink.textContent = '⚙️';
-            configLink.style.marginLeft = '20px';
-            configLink.style.fontSize = '12px';
-            configLink.onclick = (e) => {
-                e.preventDefault();
-                alert(`Advanced config for ${name} not implemented in this demo.\nEdit in script defaults if needed.`);
-            };
-            div.appendChild(configLink);
+            // Add toggle link and config panel
+            const toggleLink = document.createElement('a');
+            toggleLink.href = '#';
+            toggleLink.textContent = '⚙️';
+            toggleLink.style.marginLeft = '20px';
+            toggleLink.style.fontSize = '12px';
+            toggleLink.style.textDecoration = 'none';
 
+            const configPanel = renderHeuristicConfig(name, cfgHeur);
+            div.appendChild(configPanel);
+
+            toggleLink.onclick = (e) => {
+                e.preventDefault();
+                configPanel.style.display = configPanel.style.display === 'none' ? 'block' : 'none';
+            };
+
+            div.appendChild(toggleLink);
             heurContainer.appendChild(div);
         }
 
@@ -732,6 +819,27 @@
                 }
             });
 
+            // Update advanced heuristic parameters
+            document.querySelectorAll('#ai-heuristics-list input[data-heuristic], #ai-heuristics-list textarea[data-heuristic]').forEach(input => {
+                const heuristicName = input.dataset.heuristic;
+                const paramName = input.dataset.param;
+                const type = input.dataset.type;
+                let value;
+                if (type === 'boolean') {
+                    value = input.checked;
+                } else if (type === 'number') {
+                    value = parseFloat(input.value) || 0;
+                } else if (type === 'array') {
+                    value = input.value.split('\n').map(s => s.trim()).filter(s => s);
+                } else {
+                    value = input.value;
+                }
+
+                if (config.heuristics[heuristicName]) {
+                    config.heuristics[heuristicName][paramName] = value;
+                }
+            });
+
             saveConfig();
             log('Config saved', config);
 
@@ -746,12 +854,29 @@
             clearHighlights();
             applyHighlights();
         });
+
+        document.getElementById('ai-exclude-site').addEventListener('click', () => {
+            const currentHost = location.hostname;
+            if (!config.excludedDomains.includes(currentHost)) {
+                config.excludedDomains.push(currentHost);
+                document.getElementById('ai-excluded').value = config.excludedDomains.join('\n');
+                saveConfig();
+                if (config.debug) log(`Added ${currentHost} to excluded domains`);
+                clearHighlights();
+                settingsPanel.remove();
+                settingsPanel = null;
+                GM_notification({ text: `AI Highlighter: Excluded ${currentHost}`, timeout: 2000 });
+            } else {
+                alert('This site is already excluded.');
+            }
+        });
     }
 
     function formatHeuristicName(name) {
         return name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
     }
 
+    // ... (rest of the code remains the same)
     // ==================== INITIALIZATION ====================
     function init() {
         log('Initializing AI Highlighter');
