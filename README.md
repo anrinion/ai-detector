@@ -7,7 +7,7 @@ Tampermonkey script that highlights text likely written by an AI.
 ## Installation
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/).
-2. Add `script.js` as a new userscript.
+2. Install this script from [Greasy Fork](https://greasyfork.org/en/scripts/574901-ai-detector)
 
 ## Usage
 
