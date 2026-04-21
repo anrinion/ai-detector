@@ -13,7 +13,7 @@
 // @run-at       document-idle
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // ==================== CONFIGURATION & STATE ====================
@@ -307,7 +307,7 @@
             const ratio = titleCaseLines / Math.max(lines.length, 1);
             if (ratio >= cfg.titleCaseThreshold) {
                 score += 0.6;
-                triggers.push(`High ratio of Title Case headers (${(ratio*100).toFixed(0)}%)`);
+                triggers.push(`High ratio of Title Case headers (${(ratio * 100).toFixed(0)}%)`);
             }
 
             return { score: Math.min(score, 1.0), triggers };
@@ -327,7 +327,7 @@
             const triggers = [];
             if (uniformity >= cfg.uniformityThreshold) {
                 score = uniformity;
-                triggers.push(`Sentence length uniformity: ${(uniformity*100).toFixed(0)}% of sentences are 15-25 words`);
+                triggers.push(`Sentence length uniformity: ${(uniformity * 100).toFixed(0)}% of sentences are 15-25 words`);
             }
 
             const threeItemListPattern = /\b(\w+),\s+(\w+),\s+and\s+(\w+)\b/gi;
@@ -383,7 +383,7 @@
             if (vaguePer500 > specificPer500 * cfg.thresholdRatio) {
                 score = Math.min(vaguePer500 / (specificPer500 + 1), 1.0);
                 triggers.push(`Vague terms (${vagueCount}) outnumber specific entities (${specificCount})`);
-                if (vagueFound.length) triggers.push(`Examples: ${vagueFound.slice(0,3).join(', ')}`);
+                if (vagueFound.length) triggers.push(`Examples: ${vagueFound.slice(0, 3).join(', ')}`);
             }
 
             return { score, triggers };
@@ -429,11 +429,16 @@
     function getBlockElements() {
         const selectors = 'p, div:not(.ai-highlighter-ui):not(.ai-highlight), li, blockquote, h1, h2, h3, h4, h5, h6, section, article, td, th';
         const elements = document.querySelectorAll(selectors);
-        return Array.from(elements).filter(el => {
+        const candidates = Array.from(elements).filter(el => {
             const text = el.innerText?.trim() || '';
             if (text.length < 30) return false;
             if (el.closest('.ai-highlighter-ui')) return false;
             return true;
+        });
+        // Keep only leaf blocks: elements that contain no other candidate blocks
+        return candidates.filter(el => {
+            // Check if any child element is also a candidate
+            return !candidates.some(candidate => candidate !== el && el.contains(candidate));
         });
     }
 
