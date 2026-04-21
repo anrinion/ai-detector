@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         AI Content Highlighter
+// @name         AI Detector
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.0
 // @description  Highlight likely AI-generated text using configurable heuristics
-// @author       You
+// @author       anrinion
 // @match        *://*/*
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -40,7 +40,7 @@
                 weight: 9,
                 cjkRange: true,
                 persianRange: true,
-                leakedStrings: ['破1656', '撒']
+                leakedStrings: ['破', '撒']
             },
             vocabulary: {
                 enabled: true,
@@ -48,7 +48,7 @@
                 highRiskWords: [
                     'delve', 'tapestry', 'testament', 'realm', 'pivotal', 'vibrant',
                     'unleash', 'unlock', 'robust', 'seamless', 'operational excellence',
-                    'strategic alignment', 'in today\'s digital age'
+                    'strategic alignment', 'in today\'s digital age', 'brilliant'
                 ],
                 thresholdPer250Words: 3
             },

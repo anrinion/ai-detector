@@ -1,4 +1,4 @@
-# AI Content Highlighter
+# AI Detector
 
 Tampermonkey script that highlights text likely written by an AI.
 
