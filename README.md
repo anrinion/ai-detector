@@ -23,3 +23,11 @@ Detection uses surface heuristics only:
 - No server calls needed;
 - False positives are expected;
 - Heuristics may (probably will) become outdated as AI writing evolves, but maybe I will add new ones over time.
+
+## Inspiration
+
+**Special** thanks to all the humans who inspired me to work on this extension:
+
+- https://www.bitdoze.com/build-astro-blog-free/
+- https://www.mejba.me/blog/claude-design-website-workflow-review
+- TBC
