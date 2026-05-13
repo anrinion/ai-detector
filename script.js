@@ -4,6 +4,7 @@
 // @version      2.0.0
 // @description  Highlight likely AI-generated text using simple marker patterns
 // @author       anrinion
+// @license      MIT
 // @match        *://*/*
 // @grant        GM_getValue
 // @grant        GM_setValue
