@@ -45,7 +45,7 @@
   const AI_MARKERS = [
     {
       pattern:
-        /\b(delve|tapestry|testament|realm|pivotal|vibrant|unleash|unlock|robust|seamless)\b/i,
+        /\b(delve|tapestry|testament|realm|pivotal|vibrant|unleash|robust|seamless)\b/i,
       label: "high-risk vocabulary",
     },
     {
@@ -110,6 +110,14 @@
     "🙈",
   ]);
 
+  // Returns true if every word starts with a capital letter and the text contains a colon.
+  function isTitleCaseWithColon(text) {
+    if (!text.includes(":")) return false;
+    const tokens = text.split(/\s+/).filter((t) => /[a-zA-Z]/.test(t));
+    if (tokens.length === 0) return false;
+    return tokens.every((token) => /^[A-Z]/.test(token));
+  }
+
   // Returns the reason (string) if an AI marker is found, otherwise null.
   function getAIMarkerReason(text) {
     // Check each text-based pattern
@@ -129,6 +137,11 @@
           return `non-human emoji (${emoji})`;
         }
       }
+    }
+
+    // Title-case heading with colon (general)
+    if (isTitleCaseWithColon(text)) {
+      return `title-case heading with colon: “${escapeHtml(text)}”`;
     }
 
     return null;
