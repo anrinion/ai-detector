@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AI Detector
 // @namespace    http://tampermonkey.net/
-// @version      2.0.0
+// @version      2.1.0
 // @description  Highlight likely AI-generated text using simple marker patterns
 // @author       anrinion
 // @license      MIT
@@ -110,12 +110,21 @@
     "🙈",
   ]);
 
-  // Returns true if every word starts with a capital letter and the text contains a colon.
+  // Returns true if every word starts with an uppercase letter (any language)
+  // and the text contains a colon.
   function isTitleCaseWithColon(text) {
     if (!text.includes(":")) return false;
-    const tokens = text.split(/\s+/).filter((t) => /[a-zA-Z]/.test(t));
+    // Split into tokens that contain at least one letter (Unicode-aware)
+    const tokens = text.split(/\s+/).filter((t) => /\p{L}/u.test(t));
     if (tokens.length === 0) return false;
-    return tokens.every((token) => /^[A-Z]/.test(token));
+    return tokens.every((token) => {
+      // Find first letter in the token
+      const match = token.match(/\p{L}/u);
+      if (!match) return false;
+      const firstLetter = match[0];
+      // Check if that letter is uppercase
+      return firstLetter === firstLetter.toLocaleUpperCase();
+    });
   }
 
   // Returns the reason (string) if an AI marker is found, otherwise null.
